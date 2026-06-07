@@ -55,7 +55,7 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         return Inertia::render('projects/Show', [
-            'project' => ProjectResource::make($project->load('lead')),
+            'project' => ProjectResource::make($project->load('lead'))->resolve(),
         ]);
     }
 
@@ -64,7 +64,7 @@ class ProjectController extends Controller
         $this->authorize('update', $project);
 
         return Inertia::render('projects/Edit', [
-            'project'  => ProjectResource::make($project->load('lead')),
+            'project'  => ProjectResource::make($project->load('lead'))->resolve(),
             'statuses' => collect(ProjectStatus::cases())->map(fn ($s) => [
                 'value' => $s->value,
                 'label' => $s->label(),

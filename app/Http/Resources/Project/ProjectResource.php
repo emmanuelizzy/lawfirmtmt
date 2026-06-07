@@ -18,7 +18,7 @@ class ProjectResource extends JsonResource
                 'value' => $this->status->value,
                 'label' => $this->status->label(),
             ],
-            'lead'        => UserResource::make($this->whenLoaded('lead')),
+            'lead'        => $this->whenLoaded('lead', fn () => UserResource::make($this->lead)->resolve()),
             'tasks_count' => $this->whenCounted('tasks'),
             'created_at'  => $this->created_at->toDateTimeString(),
             'updated_at'  => $this->updated_at->toDateTimeString(),

@@ -112,11 +112,58 @@ class TaskResource extends JsonResource
             'priority'    => $this->priority,
             'due_date'    => $this->due_date,
             'is_overdue'  => $this->isOverdue(),
-            'assignee'    => UserResource::make($this->whenLoaded('assignee')),
-            'project'      => ProjectResource::make($this->whenLoaded('project')),
+            'assignee'    => $this->whenLoaded('assignee', fn () => UserResource::make($this->assignee)->resolve()),
+            'project'     => $this->whenLoaded('project', fn () => ProjectResource::make($this->project)->resolve()),
         ];
     }
 }
+```
+
+### Stripping the `data` wrapper — always use `->resolve()` for Inertia
+
+`JsonResource::make()` wraps its output in `{ "data": {...} }` when serialized as an HTTP response. Inertia hits this same serialization path, so **every nested resource ends up double-wrapped** unless you unwrap explicitly.
+
+**Rule: always call `->resolve()` when passing resources to Inertia.** This applies to both top-level single resources (in the controller) and nested resources (inside a resource's `toArray()`).
+
+#### Controllers — single resource props
+
+Use `->resolve()` on any `JsonResource::make()` call passed directly as an Inertia prop:
+
+```php
+// ✅ Correct — no data wrapper, props accessible as project.status, project.lead, etc.
+return Inertia::render('projects/Show', [
+    'project' => ProjectResource::make($project->load('lead'))->resolve(),
+]);
+
+// ❌ Wrong — Inertia will serialize this as { data: { id, title, ... } }
+// Vue then crashes trying to read project.status (it's at project.data.status)
+return Inertia::render('projects/Show', [
+    'project' => ProjectResource::make($project->load('lead')),
+]);
+```
+
+Paginated **collections** are the exception — `ResourceCollection` with a paginator already produces the correct `{ data: [], meta: {}, links: {} }` structure that the frontend expects. Do **not** call `->resolve()` on collections:
+
+```php
+// ✅ Correct — paginated collection; leave as-is so meta/links are preserved
+return Inertia::render('projects/Index', [
+    'projects' => ProjectResource::collection(
+        Project::query()->paginate(15)
+    ),
+]);
+```
+
+#### Resources — nested relationship props
+
+For nested resources inside `toArray()`, use the callback form of `whenLoaded()` so `->resolve()` is only called when the relationship is actually loaded (avoids touching the `MissingValue` sentinel):
+
+```php
+// ✅ Correct — plain array when loaded, MissingValue (omitted) when not
+'lead'     => $this->whenLoaded('lead', fn () => UserResource::make($this->lead)->resolve()),
+'assignee' => $this->whenLoaded('assignee', fn () => UserResource::make($this->assignee)->resolve()),
+
+// ❌ Wrong — wraps in { data: {...} }; Vue crashes reading lead.name (it's at lead.data.name)
+'lead'     => UserResource::make($this->whenLoaded('lead')),
 ```
 
 ### Redirects, not JSON, for writes
@@ -351,6 +398,23 @@ Use **Policies** for every model (`ProjectPolicy`, `TaskPolicy`) and `spatie/lar
 ---
 
 ## Frontend — Vue 3 + Inertia + shadcn-vue + TypeScript
+
+### Premium, professional design — non-negotiable
+
+Every page and component in this app must meet a **premium, professional standard** inspired by shadcn/ui Blocks (https://www.shadcn-vue.com/blocks). There is no "placeholder" or "good enough" UI — every screen is production-ready from day one.
+
+Concretely this means:
+- Use `Card` with full `CardHeader` / `CardTitle` / `CardDescription` / `CardContent` / `CardFooter` composition for every content section.
+- Tables live inside a `Card`. The header row has the section title + description on the left and a primary action (e.g. "New Project") on the right.
+- Status values are always rendered as coloured `Badge` components, never raw text.
+- Users/assignees are always shown with an `Avatar` + `AvatarFallback` (initials) + name.
+- Numeric counts use `Badge variant="secondary"` with `tabular-nums`.
+- Action menus use `DropdownMenu` with a ghost icon-only trigger (`MoreHorizontal`), visible only on row hover (`group-hover`).
+- Destructive actions (delete) always show a `Dialog` confirmation before executing.
+- Empty states replace the table entirely: centred icon in a muted rounded container, short headline + sub-text, primary CTA button.
+- Pagination lives in a `Separator`-separated footer row with a "Showing X–Y of Z" label on the left and page links on the right.
+- Forms are wrapped in a `Card` with a max-width (`max-w-2xl`), a back-navigation ghost button, and Cancel + Submit actions separated from the fields by a `Separator`.
+- Date strings from the backend (`"2026-06-07 10:34:23"` MySQL format) must be normalised before parsing: `new Date(dateStr.replace(' ', 'T'))`.
 
 ### Always use the shadcn-vue MCP
 Before hand-rolling any UI primitive (button, dialog, dropdown, table, card, badge, select, etc.), **add it via the shadcn-vue MCP**. Do not write custom components for things shadcn-vue provides. Compose pages from shadcn primitives.
