@@ -19,14 +19,6 @@ class Task extends Model
     /** @use HasFactory<TaskFactory> */
     use HasFactory, HasUuids;
 
-    #[Scope]
-    public function overdue(Builder $query): Builder
-    {
-        return $query->whereNotNull('due_date')
-            ->where('due_date', '<', now())
-            ->where('status', '!=', TaskStatus::DONE);
-    }
-
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
@@ -35,6 +27,14 @@ class Task extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    #[Scope]
+    public function overdue(Builder $query): Builder
+    {
+        return $query->whereNotNull('due_date')
+            ->where('due_date', '<', now())
+            ->where('status', '!=', TaskStatus::DONE);
     }
 
     public function isOverdue(): bool
