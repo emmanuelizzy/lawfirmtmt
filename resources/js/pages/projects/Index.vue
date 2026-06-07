@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { FolderOpen } from '@lucide/vue';
 import type { Project } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components//ui/button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import EmptyState from '@/components/EmptyState.vue';
 import {
     Table,
     TableBody,
@@ -70,7 +72,15 @@ const statusVariant = (value: string) => {
                     </TableHeader>
                     <TableBody>
                         <TableEmpty v-if="projects.data.length === 0" :colspan="5">
-                            No projects found.
+                            <EmptyState
+                                :icon="FolderOpen"
+                                title="No projects yet"
+                                description="Create your first project to get started."
+                            >
+                                <Button as-child size="sm">
+                                    <Link :href="create()">New Project</Link>
+                                </Button>
+                            </EmptyState>
                         </TableEmpty>
                         <TableRow v-for="project in projects.data" :key="project.id">
                             <TableCell class="font-medium">

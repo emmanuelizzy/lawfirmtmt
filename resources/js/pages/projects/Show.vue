@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { index, show, edit } from '@/routes/projects';
+import { index as tasksIndex } from '@/routes/projects.tasks';
 import { destroy } from '@/actions/App/Http/Controllers/Project/ProjectController';
 import { useForm } from '@inertiajs/vue3';
 
@@ -44,6 +45,9 @@ const deleteProject = () => {
                 </Badge>
             </div>
             <div class="flex gap-2">
+                <Button variant="outline" as-child>
+                    <Link :href="tasksIndex(project.id)">View Tasks</Link>
+                </Button>
                 <Button variant="outline" as-child>
                     <Link :href="edit(project.id)">Edit</Link>
                 </Button>

@@ -146,6 +146,8 @@ routes/
 
 The Kanban board renders on `projects/Show.vue`. Each column maps to a `TaskStatus` value. Drag-and-drop fires a `PATCH` via `useHttp` (Inertia v3) with an optimistic state update; on HTTP failure the card snaps back to its original column. `TaskStatusController::update` returns JSON (200) so the XHR path stays lightweight.
 
+> **Sidebar**: No new sidebar entry — Kanban is accessed from within a project's Show page.
+
 ---
 
 ## Slice 4 — Users & Team Management
@@ -164,6 +166,7 @@ The Kanban board renders on `projects/Show.vue`. Each column maps to a `TaskStat
 | Vue Pages | `pages/team/Index.vue`, `pages/invitations/Accept.vue` |
 | Tests | `tests/Feature/Team/UserControllerTest.php`, `InvitationControllerTest.php`, `InvitationFlowTest.php` |
 | Unit Tests | `tests/Unit/InvitationTokenTest.php`, `tests/Unit/RoleEscalationTest.php` |
+| **Sidebar** | Add **Team** entry (`Users` icon, `team.index` route) to `AppSidebar.vue` `mainNavItems` |
 
 ### Invitation flow
 
@@ -250,6 +253,7 @@ Enforced in: `StoreInvitationRequest::authorize()`, `UpdateUserRoleRequest::auth
 | Routes | `notification-routes.php` |
 | Vue Page | `pages/notifications/Index.vue` |
 | Tests | `tests/Feature/Notifications/NotificationControllerTest.php` |
+| **Sidebar** | Add **Notifications** entry (`Bell` icon, `notifications.index` route, with unread badge count) to `AppSidebar.vue` `mainNavItems` |
 
 **Triggers:**
 - `TaskAssignedNotification` → DB notification → sent to `assigned_to` user when task is created/updated with a new assignee
