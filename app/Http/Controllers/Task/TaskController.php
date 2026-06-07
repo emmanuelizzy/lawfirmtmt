@@ -60,7 +60,7 @@ class TaskController extends Controller
     {
         $project->tasks()->create($request->validated());
 
-        return to_route('projects.tasks.index', $project)->with('success', 'Task created.');
+        return to_route('projects.show', $project)->with('success', 'Task created.');
     }
 
     public function edit(Project $project, Task $task): Response
@@ -89,7 +89,7 @@ class TaskController extends Controller
     {
         $task->update($request->validated());
 
-        return to_route('projects.tasks.index', $task->project)->with('success', 'Task updated.');
+        return to_route('projects.show', $task->project_id)->with('success', 'Task updated.');
     }
 
     public function destroy(Task $task): RedirectResponse
@@ -98,6 +98,6 @@ class TaskController extends Controller
 
         $task->delete();
 
-        return to_route('projects.tasks.index', $task->project)->with('success', 'Task deleted.');
+        return to_route('projects.show', $task->project_id)->with('success', 'Task deleted.');
     }
 }
